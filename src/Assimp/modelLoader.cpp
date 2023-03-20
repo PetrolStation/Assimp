@@ -2,13 +2,13 @@
 
 #include "modelLoader.h"
 #include "Core/DebugTools.h"
-#include "Scene.h"
+#include "Core/Scene.h"
 #include "assimp/Importer.hpp"
 #include "assimp/postprocess.h"
 
-#include "Components/Entity.h"
-#include "Components/Vertex.h"
-#include "Components/Mesh.h"
+#include "Core/Components/Entity.h"
+#include "Core/Components/Vertex.h"
+#include "Core/Components/Mesh.h"
 
 #include <Static/Renderer/Renderer.h>
 
