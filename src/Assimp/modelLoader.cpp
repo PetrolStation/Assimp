@@ -38,7 +38,7 @@ namespace PetrolEngine {
 
         LOG(std::string("Running down the Root node of model(") + _path + ")", 1);
 	
-		Entity* model = _scene->createGameObject(filename.c_str());
+		Entity* model = (Entity*)_scene->createGameObject(filename.c_str());
 
 		modelLoader.processNode(scene->mRootNode, scene, model);
 
@@ -64,7 +64,7 @@ namespace PetrolEngine {
 
 		std::string fileName(_path);
 
-		Entity* model = _parent->getScene()->createGameObject(fileName.substr(fileName.find_last_of("\\/") + 1).c_str(), _parent);
+		Entity* model = (Entity*)_parent->getScene()->createGameObject(fileName.substr(fileName.find_last_of("\\/") + 1).c_str(), _parent);
 
 		modelLoader.processNode(scene->mRootNode, scene, model);
 
@@ -81,7 +81,7 @@ namespace PetrolEngine {
 			aiString path;
 			material->GetTexture(type, i, &path);
 			auto image = Image::create(path.C_Str());
-			auto tex = Renderer::createTexture(image);
+			auto tex = Renderer::createTexture(*image);
 			textures->push_back(tex);
 		}
 	}
@@ -96,7 +96,7 @@ namespace PetrolEngine {
         outputMesh->vertices.reserve(mesh->mNumVertices );
         outputMesh->indices .reserve(mesh->mNumFaces * 3);
 		
-		outputMesh->material.shader = shader;
+		outputMesh->meshRenderer->material.shader = shader;
 
 		for (uint i = 0; i < mesh->mNumVertices; i++) {
 			{ outputMesh->vertices.emplace_back(); }
@@ -163,7 +163,7 @@ namespace PetrolEngine {
 		
 		aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
 		{
-			texturesFromMaterial(material, aiTextureType_DIFFUSE, &outputMesh->material.textures);
+			texturesFromMaterial(material, aiTextureType_DIFFUSE, &outputMesh->meshRenderer->material.textures);
 			//texturesFromMaterial(material, aiTextureType_AMBIENT , TextureType::HEIGHT  , &outputMesh->material.textures);
 			//texturesFromMaterial(material, aiTextureType_HEIGHT  , TextureType::NORMAL  , &outputMesh->material.textures);
 			//texturesFromMaterial(material, aiTextureType_SPECULAR, TextureType::SPECULAR, &outputMesh->material.textures);
@@ -175,7 +175,7 @@ namespace PetrolEngine {
 			const char* name = (node->mName.length == 0) ? "New node" : node->mName.C_Str();
 
 			Scene* scene = parent->getScene();
-			Entity* meshEntity = scene->createGameObject(name, parent);
+			Entity* meshEntity = (Entity*)scene->createGameObject(name, parent);
 			Mesh*  mesh = &meshEntity->addComponent<Mesh>();
 
 			ModelLoader::processMesh(_mesh_, _scene, mesh);
