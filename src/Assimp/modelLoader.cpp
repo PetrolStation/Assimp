@@ -12,6 +12,13 @@
 
 #include <Static/Renderer/Renderer.h>
 
+#include<assimp/quaternion.h>
+#include<assimp/vector3.h>
+#include<assimp/matrix4x4.h>
+#include<glm/glm.hpp>
+#include<glm/gtc/quaternion.hpp>
+
+
 namespace PetrolEngine {
 
 	std::mutex  ModelLoader::mutex;
@@ -99,6 +106,8 @@ namespace PetrolEngine {
 		outputMesh->meshRenderer->material.shader = shader;
 
 		for (uint i = 0; i < mesh->mNumVertices; i++) {
+			{ outputMesh->boneIDs.push_back({-1, -1, -1, -1}); }
+			{ outputMesh->boneWeights.push_back({0.f, 0.f, 0.f, 0.f}); }
 			{ outputMesh->vertices.emplace_back(); }
 
             auto& meshPosition =      mesh->mVertices[i];
@@ -156,6 +165,44 @@ namespace PetrolEngine {
 			}
 		}
 
+				for (int boneIndex = 0; boneIndex < mesh->mNumBones; ++boneIndex)
+        {
+            int boneID = -1;
+            std::string boneName = mesh->mBones[boneIndex]->mName.C_Str();
+            if (outputMesh->m_BoneInfoMap.find(boneName) == outputMesh->m_BoneInfoMap.end())
+            {
+                BoneInfo newBoneInfo;
+                newBoneInfo.id = outputMesh->m_BoneCounter;
+                newBoneInfo.offset = AssimpGLMHelpers::ConvertMatrixToGLMFormat(mesh->mBones[boneIndex]->mOffsetMatrix);
+                outputMesh->m_BoneInfoMap[boneName] = newBoneInfo;
+                boneID = outputMesh->m_BoneCounter;
+                outputMesh->m_BoneCounter++;
+            }
+            else
+            {
+                boneID = outputMesh->m_BoneInfoMap[boneName].id;
+            }
+            assert(boneID != -1);
+            auto weights = mesh->mBones[boneIndex]->mWeights;
+            int numWeights = mesh->mBones[boneIndex]->mNumWeights;
+
+            for (int weightIndex = 0; weightIndex < numWeights; ++weightIndex)
+            {
+                int vertexId = weights[weightIndex].mVertexId;
+                float weight = weights[weightIndex].mWeight;
+                assert(vertexId <= vertices.size());
+      					for (int i = 0; i < 4; ++i) {
+            			if (outputMesh->boneIDs[vertexId][i] < 0) {
+                		outputMesh->boneWeights[vertexId][i] = weight;
+                		outputMesh->boneIDs[vertexId][i] = boneID;
+              		  break;
+        			    }
+				        }
+                //SetVertexBoneData(vertices[vertexId], boneID, weight);
+            }
+        }
+
+
         outputMesh->recalculateMesh();
 
 		// outputMesh->vertexBuffer->setData(vertices.data(), vertices.size() * sizeof(Vertex));
@@ -185,3 +232,4 @@ namespace PetrolEngine {
 		}
 	}
 }
+
